@@ -34,7 +34,6 @@ class FormAction(Action):
     def required_slots(tracker):
         # type: (Tracker) -> List[Text]
         """A list of required slots that the form has to fill
-
             Use `tracker` to request different list of slots
             depending on the state of the dialogue
         """
@@ -103,7 +102,6 @@ class FormAction(Action):
             - intent: value pairs
             - a whole message
             or a list of them, where the first match will be picked
-
             Empty dict is converted to a mapping of
             the slot to the extracted entity with the same name
         """
@@ -241,7 +239,6 @@ class FormAction(Action):
         # type: (CollectingDispatcher, Tracker, Dict[Text, Any]) -> List[Dict]
         """Validate extracted value of requested slot
             else reject execution of the form action
-
             Subclass this method to add custom validation and rejection logic
         """
         # extract other slots that were not requested
