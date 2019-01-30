@@ -280,7 +280,7 @@ class FormAction(Action):
                                           tracker,
                                           silent_fail=False,
                                           **tracker.slots)
-                tracker.followup_action = "action_schedule_reminder"
+                # tracker.followup_action = "action_schedule_reminder"
                 return [SlotSet(REQUESTED_SLOT, slot)]
 
         logger.debug("No slots left to request")
