@@ -6,10 +6,11 @@ from __future__ import unicode_literals
 
 import logging
 import typing
+from datetime import datetime, timedelta
 from typing import Dict, Text, Any, List, Union, Optional, Tuple
 
 from rasa_core_sdk import Action, ActionExecutionRejection
-from rasa_core_sdk.events import SlotSet, Form
+from rasa_core_sdk.events import SlotSet, Form, ReminderScheduled
 
 logger = logging.getLogger(__name__)
 
@@ -248,8 +249,14 @@ class FormAction(Action):
         # extract requested slot
         slot_to_fill = tracker.get_slot(REQUESTED_SLOT)
         if slot_to_fill:
-            slot_values.update(self.extract_requested_slot(dispatcher,
-                                                           tracker, domain))
+            for slot, value in self.extract_requested_slot(dispatcher,
+                                                           tracker,
+                                                           domain).items():
+                validate_func = getattr(self, "validate_{}".format(slot),
+                                        lambda *x: value)
+                slot_values[slot] = validate_func(value, dispatcher, tracker,
+                                                  domain)
+
             if not slot_values:
                 # reject to execute the form action
                 # if some slot was requested but nothing was extracted
@@ -280,7 +287,6 @@ class FormAction(Action):
                                           tracker,
                                           silent_fail=False,
                                           **tracker.slots)
-                # tracker.followup_action = "action_schedule_reminder"
                 return [SlotSet(REQUESTED_SLOT, slot)]
 
         logger.debug("No slots left to request")
@@ -388,12 +394,15 @@ class FormAction(Action):
         for e in events:
             if e['event'] == 'slot':
                 temp_tracker.slots[e["name"]] = e["value"]
-
+        iwe_events = self.update_iwe(dispatcher, tracker,
+                                                  domain)
         next_slot_events = self.request_next_slot(dispatcher, temp_tracker,
                                                   domain)
         if next_slot_events is not None:
             # request next slot
+            events.extend(iwe_events)
             events.extend(next_slot_events)
+            # events.extend(ReminderScheduled(action_name="action_reminder", trigger_date_time=datetime.now() + timedelta(minutes=1), kill_on_user_message=True))
         else:
             # there is nothing more to request, so we can submit
             events.extend(self.submit(dispatcher, temp_tracker, domain))

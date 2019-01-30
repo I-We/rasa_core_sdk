@@ -179,4 +179,3 @@ class ActionExecutor(object):
             return self._create_api_response(events, dispatcher.messages)
         else:
             logger.warning("Received an action call without an action.")
-
